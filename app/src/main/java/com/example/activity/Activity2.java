@@ -8,11 +8,12 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class Activity2 extends AppCompatActivity {
-    static final int REQUEST_SELECT_CONTACT = 1;
+    static final int REQUEST_SELECT_PHONE_NUMBER = 1;
     Button button;
 
     @Override
@@ -30,22 +31,33 @@ public class Activity2 extends AppCompatActivity {
 
     public void selectContact() {
         Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
         //if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(intent, REQUEST_SELECT_CONTACT);
+            startActivityForResult(intent, REQUEST_SELECT_PHONE_NUMBER);
         //}
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_SELECT_CONTACT && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_SELECT_PHONE_NUMBER && resultCode == RESULT_OK) {
             Uri contactUri = data.getData();
 
             ContentResolver contentResolver = getContentResolver();
             Cursor cursor = null;
             if (contactUri != null) {
-                cursor = contentResolver.query(contactUri, new String[]{"display_name","data1"},null,null,null);
+                cursor = contentResolver.query(contactUri,
+                        new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                                ContactsContract.CommonDataKinds.Phone.NUMBER},
+                        null,null,null);
+            }
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                int phoneIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                String name = cursor.getString(nameIndex);
+                String phone = cursor.getString(phoneIndex);
+                TextView contactInfo = findViewById(R.id.contactInfo);
+                contactInfo.setText(String.format("%s %s", name, phone));
             }
             cursor.close();
         }
